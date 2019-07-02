@@ -16,7 +16,9 @@ Public tranport data in OSM is very complex, with several schemas possible to de
 The method used to extract data is the following:
 * Extracting all the Stops (either StopPositions or Platforms) only for bus as a first step. A bus stop is defined by a way or a node containing either:
   * `highway=bus_stop`
-  * or `public_transport=platform` or `public_transport=stop_position` also having either `highway=bus_stop` or `bus=yes`
+  * `railway=tram_stop`
+  * `public_transport=platform`
+  * `public_transport=stop_position`
 * Extracting all the StopAreas : relations with `public_transport=stop_area`
 * Extracting all the Public Transport Routes and Lines (see below)
 * Defining for each Stop if it's a StopPosition or a Platform (see below)
@@ -72,11 +74,11 @@ A complementary extraction is made with potential PT relations that has a `route
   * with `stop_position` => the object is a StopPosition
   * with `platform` => the object is a Platform
   * else : consider value as invalid and continue as if `public_transport` is unset (see below)
-* else if the property `highway=bus_stop` is present and the object is contained in (at least) a Route
+* else if the object is contained in (at least) a Route
   * if one of the Routes have `public_transport:version = 2`
     * if the stop has the role `platform`, `platform_exit_only`, `platform_entry_only` => the object is a Platform
     * if the stop has the role `stop`, `stop_exit_only` or `stop_entry_only` => the object is a StopPosition
     * else => check with an other Route
   * else => this stop is unknown
 
-Unknown stops are considered to be Plaforms for the extraction.
+A special type `UnknownStop` is applied when no decision can be made between `StopPosition` or `Platform`.
