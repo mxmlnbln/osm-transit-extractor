@@ -27,45 +27,13 @@ The method used to extract data is the following:
 **Extraction of Public Transport Routes and Lines**
 To define if a relation is a public transport Route (resp. Line), the following method is used :
 * The relation contains the tag `type=route` (resp. `type=route_master`)
-* The relation contains the tag `route` with a value contained in the followings:
-  * trolleybus
-  * bus
-  * train
-  * subway
-  * light_rail
-  * monorail
-  * tram
-  * railway
-  * ferry
-  * coach
-  * aerialway
-  * funicular
-  * rail
-  * share_taxi
+* The relation contains the tag `route` (resp. `route_master`) with a value:
+  + contained in the following white list : trolleybus, bus, train, subway, light_rail, monorail, tram, railway, ferry, coach, aerialway, funicular, rail, share_taxi
+  + **not** contained in the following black list :
+bicycle, canoe, detour, fitness_trail, foot, hiking, horse, inline_skates, mtb, nordic_walking, pipeline, piste, power, proposed, road, running, ski, historic, path, junction, tracks
 
-A complementary extraction is made with potential PT relations that has a `route` (resp. `route_master`) tag value that is **not** contained in the list:
-* bicycle
-* canoe
-* detour
-* fitness_trail
-* foot
-* hiking
-* horse
-* inline_skates
-* mtb
-* nordic_walking
-* pipeline
-* piste
-* power
-* proposed
-* road
-* running
-* ski
-* historic
-* path
-* junction
-* tracks
 
+The program show a warning in logs when a value not in the white list and not in the black list is encountered. 
 
 
 **Categorization of Stops**
