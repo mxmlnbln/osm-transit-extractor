@@ -76,8 +76,16 @@ impl Coord {
 }
 
 #[derive(Debug, Clone)]
+pub enum StopPointType {
+    StopPosition,
+    Platform,
+    Unknown
+}
+
+#[derive(Debug, Clone)]
 pub struct StopPoint {
     pub id: String,
+    pub stop_point_type: StopPointType,
     pub coord: Coord,
     pub name: String,
     pub all_osm_tags: osmpbfreader::objects::Tags,
@@ -209,8 +217,12 @@ pub fn parse_osm_pbf(path: &str) -> OsmPbfReader {
 }
 
 fn is_stop_point(obj: &osmpbfreader::OsmObj) -> bool {
-    obj.tags().contains("public_transport", "plateform")
-        || (obj.is_node() && obj.tags().contains("highway", "bus_stop"))
+    (obj.is_node() || obj.is_way() ) && (
+        obj.tags().contains("public_transport", "platform")
+        || obj.tags().contains("public_transport", "stop_position")
+        || obj.tags().contains("highway", "bus_stop")
+        || obj.tags().contains("railway", "tram_stop")
+    ) 
 }
 
 fn is_stop_area(obj: &osmpbfreader::OsmObj) -> bool {
@@ -394,6 +406,7 @@ fn osm_line_to_shape(
 }
 
 fn osm_route_to_stop_list(osm_relation: &osmpbfreader::Relation) -> Vec<String> {
+    //TODO : ajouter le rôle en plus du stop_id dans la liste
     osm_relation
         .refs
         .iter()
@@ -493,6 +506,7 @@ fn osm_obj_to_stop_point(
     let osm_tags = obj.tags().clone();
     StopPoint {
         id,
+        stop_point_type : StopPointType::Unknown,
         name,
         coord,
         all_osm_tags: osm_tags,
@@ -565,8 +579,37 @@ pub fn get_lines_from_osm(pbf: &mut OsmPbfReader) -> Vec<Line> {
         .collect()
 }
 
+pub fn get_routes_from_stop(routes: &Vec<Route>, stop_point : &StopPoint) -> Vec<Route> {
+    routes.iter()
+    .filter(|route| route.ordered_stops_id.contains(&stop_point.id) )
+    .map(|obj| obj.clone())
+    .collect()
+}
+
+
+pub fn categorize_stop_point(stop_point : &StopPoint, routes: Vec<Route>) -> StopPoint {
+    let mut result_sp = stop_point.clone();
+    if result_sp.all_osm_tags.contains("public_transport", "platform") {
+        result_sp.stop_point_type = StopPointType::Platform;
+    } else if result_sp.all_osm_tags.contains("public_transport", "stop_position") {
+        result_sp.stop_point_type = StopPointType::StopPosition;
+    } else {
+        let routes_ptv2 = routes.iter().filter(|r| r.all_osm_tags.contains("public_transport:version", "2")).collect();
+        for route in routes_ptv2 {
+            code
+        }
+    }
+    result_sp
+}
+
+pub fn update_stop_points_type(stop_points: &Vec<StopPoint>, routes: &Vec<Route>) -> Vec<StopPoint> {
+    stop_points.iter()
+        // .filter(|sp| sp.all_osm_tags.contains("public_transport", "platform")
+        .map(|sp| categorize_stop_point(sp, get_routes_from_stop(&routes, sp))).collect()
+}
+
 pub fn get_osm_tcobjects(parsed_pbf: &mut OsmPbfReader, stops_only: bool) -> OsmTcResponse {
-    let stop_points = get_stop_points_from_osm(parsed_pbf);
+    let mut stop_points = get_stop_points_from_osm(parsed_pbf);
     let stop_areas = get_stop_areas_from_osm(parsed_pbf);
     if stops_only {
         OsmTcResponse {
@@ -578,6 +621,7 @@ pub fn get_osm_tcobjects(parsed_pbf: &mut OsmPbfReader, stops_only: bool) -> Osm
     } else {
         let routes = get_routes_from_osm(parsed_pbf);
         let lines = get_lines_from_osm(parsed_pbf);
+        stop_points = update_stop_points_type(&mut stop_points, &routes);
         OsmTcResponse {
             stop_points,
             stop_areas,
@@ -608,7 +652,7 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
     let csv_file = output_dir.join("osm-transit-extractor_stop_points.csv");
 
     let mut wtr = csv::Writer::from_path(csv_file).unwrap();
-    let default_header = ["stop_point_id", "lat", "lon", "name", "first_stop_area_id"];
+    let default_header = ["stop_point_id", "lat", "lon", "name", "stop_point_type", "first_stop_area_id"];
     let osm_tag_list: BTreeSet<String> = stop_points
         .iter()
         .flat_map(|s| s.all_osm_tags.keys().map(|s| s.to_string()))
@@ -632,6 +676,7 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
             sp.coord.lat.to_string(),
             sp.coord.lon.to_string(),
             sp.name.to_string(),
+            format!("{:?}", sp.stop_point_type),
             stop_area_ids
                 .iter()
                 .next()
