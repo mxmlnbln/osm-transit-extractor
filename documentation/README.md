@@ -14,7 +14,7 @@ The objects extracted from OSM are the following :
 Public tranport data in OSM is very complex, with several schemas possible to describe a same transport object.
 
 The method used to extract data is the following:
-* Extracting all the Stops (either StopPositions or Platforms) only for bus as a first step. A bus stop is defined by a way or a node containing either:
+* Extracting all the Stops (either StopPositions or Platforms) as a first step. A stop is defined by a way or a node containing either:
   * `highway=bus_stop`
   * `railway=tram_stop`
   * `public_transport=platform`
