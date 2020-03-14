@@ -8,7 +8,22 @@ pub fn osm_fixture_stoppoints() {
     let mut parsed_pbf = osmpbfreader::OsmPbfReader::new(std::fs::File::open(&osm_path).unwrap());
     let stops = osm_transit_extractor::get_stop_points_from_osm(&mut parsed_pbf);
     assert_eq!(stops[0].id, "node:260743996");
-    assert_eq!(stops.len(), 64);
+    assert_eq!(stops.len(), 77);
+}
+
+#[test]
+pub fn osm_fixture_stoppoints_categorization() {
+    let osm_path = std::env::current_dir()
+        .unwrap()
+        .join("tests/fixtures/osm_fixture.osm.pbf");
+    let mut parsed_pbf = osmpbfreader::OsmPbfReader::new(std::fs::File::open(&osm_path).unwrap());
+    let mut stop_points = osm_transit_extractor::get_stop_points_from_osm(&mut parsed_pbf);
+    let routes = osm_transit_extractor::get_routes_from_osm(&mut parsed_pbf);
+    stop_points = osm_transit_extractor::update_stop_points_type(&mut stop_points, &routes);
+    let stop_points_unknown: Vec<&osm_transit_extractor::StopPoint> = stop_points.iter().filter(|s| s.stop_point_type == osm_transit_extractor::StopPointType::Unknown).collect();
+    let stop_points_platform: Vec<&osm_transit_extractor::StopPoint> = stop_points.iter().filter(|s| s.stop_point_type == osm_transit_extractor::StopPointType::Platform).collect();
+    assert_eq!(stop_points_unknown.len(), 52);
+    assert_eq!(stop_points_platform.len(), 12);
 }
 
 #[test]
@@ -21,9 +36,9 @@ pub fn osm_fixture_routes_count() {
     assert_eq!(routes.len(), 3);
     for r in routes {
         if r.id == "relation:1257168" {
-            assert_eq!(r.ordered_stops_id.len(), 34);
-            assert_eq!(r.ordered_stops_id[0], "node:3270784465");
-            assert_eq!(r.ordered_stops_id[30], "node:1577028157");
+            assert_eq!(r.ordered_route_points.len(), 34);
+            assert_eq!(r.ordered_route_points[0].stop_point_id, "node:3270784465");
+            assert_eq!(r.ordered_route_points[30].stop_point_id, "node:1577028157");
         }
     }
 }
