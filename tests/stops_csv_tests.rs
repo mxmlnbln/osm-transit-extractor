@@ -20,8 +20,14 @@ pub fn osm_fixture_stoppoints_categorization() {
     let mut stop_points = osm_transit_extractor::get_stop_points_from_osm(&mut parsed_pbf);
     let routes = osm_transit_extractor::get_routes_from_osm(&mut parsed_pbf);
     stop_points = osm_transit_extractor::update_stop_points_type(&mut stop_points, &routes);
-    let stop_points_unknown: Vec<&osm_transit_extractor::StopPoint> = stop_points.iter().filter(|s| s.stop_point_type == osm_transit_extractor::StopPointType::Unknown).collect();
-    let stop_points_platform: Vec<&osm_transit_extractor::StopPoint> = stop_points.iter().filter(|s| s.stop_point_type == osm_transit_extractor::StopPointType::Platform).collect();
+    let stop_points_unknown: Vec<&osm_transit_extractor::StopPoint> = stop_points
+        .iter()
+        .filter(|s| s.stop_point_type == osm_transit_extractor::StopPointType::Unknown)
+        .collect();
+    let stop_points_platform: Vec<&osm_transit_extractor::StopPoint> = stop_points
+        .iter()
+        .filter(|s| s.stop_point_type == osm_transit_extractor::StopPointType::Platform)
+        .collect();
     assert_eq!(stop_points_unknown.len(), 52);
     assert_eq!(stop_points_platform.len(), 12);
 }
