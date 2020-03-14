@@ -635,7 +635,7 @@ pub fn categorize_stop_point(stop_point: &StopPoint, routes: Vec<Route>) -> Stop
     {
         result_sp.stop_point_type = StopPointType::StopPosition;
     } else {
-        let routes_ptv2: Vec<Route> = routes
+        let mut routes_ptv2: Vec<Route> = routes
             .iter()
             .filter(|r| r.all_osm_tags.contains("public_transport:version", "2"))
             .map(|obj| obj.clone())
@@ -645,6 +645,7 @@ pub fn categorize_stop_point(stop_point: &StopPoint, routes: Vec<Route>) -> Stop
             stop_point.id,
             routes_ptv2.len()
         );
+        routes_ptv2.sort_by(|a, b| b.id.cmp(&a.id));
         for route in routes_ptv2 {
             let ptv2_stop_point_uses = route.get_stop_point_roles(&stop_point.id);
             if ptv2_stop_point_uses.contains(&String::from("platform"))

@@ -33,7 +33,7 @@ To define if a relation is a public transport Route (resp. Line), the following 
 bicycle, canoe, detour, fitness_trail, foot, hiking, horse, inline_skates, mtb, nordic_walking, pipeline, piste, power, proposed, road, running, ski, historic, path, junction, tracks
 
 
-The program show a warning in logs when a value not in the white list and not in the black list is encountered. 
+The program show a warning in logs when a value not in the white list and not in the black list is encountered.
 
 
 **Categorization of Stops**
@@ -49,4 +49,4 @@ The program show a warning in logs when a value not in the white list and not in
     * else => check with an other Route
   * else => this stop is unknown
 
-A special type `UnknownStop` is applied when no decision can be made between `StopPosition` or `Platform`.
+A special type `Unknown` is applied when no decision can be made between `StopPosition` or `Platform`.
