@@ -128,22 +128,20 @@ pub struct Route {
 
 impl Route {
     fn contains_stop_point_id(&self, stop_point_id: &String) -> bool {
-        let rps: Vec<&RoutePoint> = self
-            .ordered_route_points
+        self.ordered_route_points
             .iter()
             .filter(|rp| rp.stop_point_id == *stop_point_id)
-            .map(|rp| rp)
-            .collect();
-        !rps.is_empty()
+            .count()
+            != 0
     }
 }
 
 impl Route {
-    fn get_stop_point_roles(&self, stop_point_id: &String) -> Vec<String> {
+    fn get_stop_point_roles<'a>(&'a self, stop_point_id: &String) -> Vec<&'a String> {
         self.ordered_route_points
             .iter()
             .filter(|rp| rp.stop_point_id == *stop_point_id)
-            .map(|rp| rp.role.to_string())
+            .map(|rp| &rp.role)
             .collect()
     }
 }
@@ -437,19 +435,16 @@ fn osm_route_to_route_points_list(osm_relation: &osmpbfreader::Relation) -> Vec<
         .refs
         .iter()
         .filter(|refe| is_stop(*refe))
-        .map(|refe| match refe.member {
-            osmpbfreader::OsmId::Node(obj_id) => RoutePoint {
-                role: (*refe.role).to_string(),
-                stop_point_id: format!("node:{}", obj_id.0),
-            },
-            osmpbfreader::OsmId::Way(obj_id) => RoutePoint {
-                role: (*refe.role).to_string(),
-                stop_point_id: format!("way:{}", obj_id.0),
-            },
-            osmpbfreader::OsmId::Relation(obj_id) => RoutePoint {
-                role: (*refe.role).to_string(),
-                stop_point_id: format!("relation:{}", obj_id.0),
-            },
+        .map(|refe| {
+            let stop_point_id = match refe.member {
+                osmpbfreader::OsmId::Node(obj_id) => format!("node:{}", obj_id.0),
+                osmpbfreader::OsmId::Way(obj_id) => format!("way:{}", obj_id.0),
+                osmpbfreader::OsmId::Relation(obj_id) => format!("relation:{}", obj_id.0),
+            };
+            RoutePoint {
+                role: refe.role.to_string(),
+                stop_point_id,
+            }
         })
         .collect()
 }
@@ -614,31 +609,28 @@ pub fn get_lines_from_osm(pbf: &mut OsmPbfReader) -> Vec<Line> {
         .collect()
 }
 
-pub fn get_routes_from_stop(routes: &Vec<Route>, stop_point: &StopPoint) -> Vec<Route> {
+pub fn get_routes_from_stop<'a>(routes: &'a Vec<Route>, stop_point: &StopPoint) -> Vec<&'a Route> {
     routes
         .iter()
         .filter(|route| route.contains_stop_point_id(&stop_point.id))
-        .map(|obj| obj.clone())
         .collect()
 }
 
-pub fn categorize_stop_point(stop_point: &StopPoint, routes: Vec<Route>) -> StopPoint {
-    let mut result_sp = stop_point.clone();
-    if result_sp
+pub fn categorize_stop_point(stop_point: &mut StopPoint, routes: Vec<&Route>) {
+    if stop_point
         .all_osm_tags
         .contains("public_transport", "platform")
     {
-        result_sp.stop_point_type = StopPointType::Platform;
-    } else if result_sp
+        stop_point.stop_point_type = StopPointType::Platform;
+    } else if stop_point
         .all_osm_tags
         .contains("public_transport", "stop_position")
     {
-        result_sp.stop_point_type = StopPointType::StopPosition;
+        stop_point.stop_point_type = StopPointType::StopPosition;
     } else {
-        let mut routes_ptv2: Vec<Route> = routes
-            .iter()
+        let mut routes_ptv2: Vec<&Route> = routes
+            .into_iter()
             .filter(|r| r.all_osm_tags.contains("public_transport:version", "2"))
-            .map(|obj| obj.clone())
             .collect();
         warn!(
             "categorization of stop_point {} needs pt_v2 routes. {} ptv2 routes found",
@@ -648,33 +640,29 @@ pub fn categorize_stop_point(stop_point: &StopPoint, routes: Vec<Route>) -> Stop
         routes_ptv2.sort_by(|a, b| b.id.cmp(&a.id));
         for route in routes_ptv2 {
             let ptv2_stop_point_uses = route.get_stop_point_roles(&stop_point.id);
-            if ptv2_stop_point_uses.contains(&String::from("platform"))
-                || ptv2_stop_point_uses.contains(&String::from("platform_exit_only"))
-                || ptv2_stop_point_uses.contains(&String::from("platform_entry_only"))
+            if ptv2_stop_point_uses.contains(&&String::from("platform"))
+                || ptv2_stop_point_uses.contains(&&String::from("platform_exit_only"))
+                || ptv2_stop_point_uses.contains(&&String::from("platform_entry_only"))
             {
-                result_sp.stop_point_type = StopPointType::Platform;
-            } else if ptv2_stop_point_uses.contains(&String::from("stop"))
-                || ptv2_stop_point_uses.contains(&String::from("stop_exit_only"))
-                || ptv2_stop_point_uses.contains(&String::from("stop_entry_only"))
+                stop_point.stop_point_type = StopPointType::Platform;
+            } else if ptv2_stop_point_uses.contains(&&String::from("stop"))
+                || ptv2_stop_point_uses.contains(&&String::from("stop_exit_only"))
+                || ptv2_stop_point_uses.contains(&&String::from("stop_entry_only"))
             {
-                result_sp.stop_point_type = StopPointType::StopPosition;
+                stop_point.stop_point_type = StopPointType::StopPosition;
             }
-            if result_sp.stop_point_type != StopPointType::Unknown {
+            if stop_point.stop_point_type != StopPointType::Unknown {
                 break;
             }
         }
     }
-    result_sp
 }
 
-pub fn update_stop_points_type(
-    stop_points: &Vec<StopPoint>,
-    routes: &Vec<Route>,
-) -> Vec<StopPoint> {
-    stop_points
-        .iter()
-        .map(|sp| categorize_stop_point(sp, get_routes_from_stop(&routes, sp)))
-        .collect()
+pub fn update_stop_points_type(stop_points: &mut Vec<StopPoint>, routes: &Vec<Route>) {
+    stop_points.iter_mut().for_each(|mut sp| {
+        let route_from_stops = get_routes_from_stop(&routes, sp);
+        categorize_stop_point(&mut sp, route_from_stops);
+    })
 }
 
 pub fn get_osm_tcobjects(parsed_pbf: &mut OsmPbfReader, stops_only: bool) -> OsmTcResponse {
@@ -690,7 +678,7 @@ pub fn get_osm_tcobjects(parsed_pbf: &mut OsmPbfReader, stops_only: bool) -> Osm
     } else {
         let routes = get_routes_from_osm(parsed_pbf);
         let lines = get_lines_from_osm(parsed_pbf);
-        stop_points = update_stop_points_type(&mut stop_points, &routes);
+        update_stop_points_type(&mut stop_points, &routes);
         OsmTcResponse {
             stop_points,
             stop_areas,
@@ -753,11 +741,7 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
             sp.coord.lon.to_string(),
             sp.name.to_string(),
             format!("{:?}", sp.stop_point_type),
-            stop_area_ids
-                .iter()
-                .next()
-                .unwrap_or(&"".to_string())
-                .to_string(),
+            stop_area_ids.into_iter().next().unwrap_or_else(String::new),
         ];
         if all_tags {
             csv_row = csv_row
