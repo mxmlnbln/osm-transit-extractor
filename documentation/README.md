@@ -8,10 +8,10 @@ The objects extracted from OSM are the following :
 * Route : corresponding to OSM relation (type=route)[https://wiki.openstreetmap.org/wiki/FR:Relation:route]
 * StopPosition : Place where the bus/tram/metro/... stops
 * Platform : Place where passengers are waiting to embark in a bus/tram/metro/...
-* StopArea : Group of StopPositions and Platforms generaly known with a single name (like a train station for exemple)
+* StopArea : Group of StopPositions and Platforms generally known with a single name (like a train station for example)
 
 ## Extraction of OSM Data
-Public tranport data in OSM is very complex, with several schemas possible to describe a same transport object.
+Public tranport data in OSM is very complex, with several schemas possible to describe the same transport object.
 
 The method used to extract data is the following:
 * Extracting all the Stops (either StopPositions or Platforms) as a first step. A stop is defined by a way or a node containing either:
@@ -33,7 +33,7 @@ To define if a relation is a public transport Route (resp. Line), the following 
 bicycle, canoe, detour, fitness_trail, foot, hiking, horse, inline_skates, mtb, nordic_walking, pipeline, piste, power, proposed, road, running, ski, historic, path, junction, tracks
 
 
-The program show a warning in logs when a value not in the white list and not in the black list is encountered.
+The program shows a warning in logs when a value not in the white list and not in the black list is encountered (note that the object is extracted). 
 
 
 **Categorization of Stops**
