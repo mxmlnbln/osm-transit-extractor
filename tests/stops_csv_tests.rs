@@ -33,6 +33,16 @@ pub fn osm_fixture_stoppoints_categorization() {
 }
 
 #[test]
+pub fn osm_fixture_stopareas() {
+    let osm_path = std::env::current_dir()
+        .unwrap()
+        .join("tests/fixtures/osm_fixture.osm.pbf");
+    let mut parsed_pbf = osmpbfreader::OsmPbfReader::new(std::fs::File::open(&osm_path).unwrap());
+    let stop_areas = osm_transit_extractor::get_stop_areas_from_osm(&mut parsed_pbf);
+    assert_eq!(stop_areas.len(), 1);
+}
+
+#[test]
 pub fn osm_fixture_routes_count() {
     let osm_path = std::env::current_dir()
         .unwrap()
@@ -107,7 +117,19 @@ pub fn osm_fixture_stoppoints_csv() {
     let mut parsed_pbf = osmpbfreader::OsmPbfReader::new(std::fs::File::open(&osm_path).unwrap());
     let stops = osm_transit_extractor::get_stop_points_from_osm(&mut parsed_pbf);
     let tmp_dir = TempDir::new("osm_transit_extractor").expect("create temp dir");
-    osm_transit_extractor::write_stop_points_to_csv(&stops, &vec![], &tmp_dir, false);
+    osm_transit_extractor::write_stop_points_to_csv(&stops, &tmp_dir, false);
+    tmp_dir.close().expect("delete temp dir");
+}
+
+#[test]
+pub fn osm_fixture_stopareas_stoppoints_csv() {
+    let osm_path = std::env::current_dir()
+        .unwrap()
+        .join("tests/fixtures/osm_fixture.osm.pbf");
+    let mut parsed_pbf = osmpbfreader::OsmPbfReader::new(std::fs::File::open(&osm_path).unwrap());
+    let stop_areas = osm_transit_extractor::get_stop_areas_from_osm(&mut parsed_pbf);
+    let tmp_dir = TempDir::new("osm_transit_extractor").expect("create temp dir");
+    osm_transit_extractor::write_stop_areas_stop_point_to_csv(&stop_areas, &tmp_dir);
     tmp_dir.close().expect("delete temp dir");
 }
 

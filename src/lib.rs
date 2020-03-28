@@ -688,20 +688,8 @@ pub fn get_osm_tcobjects(parsed_pbf: &mut OsmPbfReader, stops_only: bool) -> Osm
     }
 }
 
-fn get_stop_area_ids_for_stop_point(
-    stop_point_id: &String,
-    stop_areas: &Vec<StopArea>,
-) -> Vec<String> {
-    stop_areas
-        .iter()
-        .filter(|sa| sa.stop_point_ids.contains(stop_point_id))
-        .map(|sa| format!("StopArea:{}", sa.id))
-        .collect()
-}
-
 pub fn write_stop_points_to_csv<P: AsRef<Path>>(
     stop_points: &Vec<StopPoint>,
-    stop_areas: &Vec<StopArea>,
     output_dir: P,
     all_tags: bool,
 ) {
@@ -715,7 +703,6 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
         "lon",
         "name",
         "stop_point_type",
-        "first_stop_area_id",
     ];
     let osm_tag_list: BTreeSet<String> = stop_points
         .iter()
@@ -734,14 +721,12 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
     }
 
     for sp in stop_points {
-        let stop_area_ids = get_stop_area_ids_for_stop_point(&sp.id, &stop_areas);
         let mut csv_row = vec![
             format!("StopPoint:{}", sp.id),
             sp.coord.lat.to_string(),
             sp.coord.lon.to_string(),
             sp.name.to_string(),
             format!("{:?}", sp.stop_point_type),
-            stop_area_ids.into_iter().next().unwrap_or_else(String::new),
         ];
         if all_tags {
             csv_row = csv_row
@@ -755,6 +740,27 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
                 .collect();
         }
         wtr.serialize(csv_row).unwrap();
+    }
+}
+
+pub fn write_stop_areas_stop_point_to_csv<P: AsRef<Path>>(
+    stop_areas: &Vec<StopArea>,
+    output_dir: P,
+) {
+    let output_dir = output_dir.as_ref();
+    let csv_file = output_dir.join("osm-transit-extractor_stop_areas_stop_point.csv");
+
+    let mut wtr = csv::Writer::from_path(csv_file).unwrap();
+    let default_header = ["stop_area_id", "stop_point_id"];
+    wtr.serialize(default_header).unwrap();
+    for sa in stop_areas {
+        for sp_id in &sa.stop_point_ids {
+            let csv_row = vec![
+                format!("StopArea:{}", sa.id),
+                format!("StopPoint:{}", sp_id)
+            ];
+            wtr.serialize(csv_row).unwrap();
+        }
     }
 }
 
