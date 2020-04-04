@@ -1,4 +1,8 @@
 use tempdir::TempDir;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
 #[test]
 pub fn osm_fixture_stoppoints() {
@@ -118,6 +122,14 @@ pub fn osm_fixture_stoppoints_csv() {
     let stops = osm_transit_extractor::get_stop_points_from_osm(&mut parsed_pbf);
     let tmp_dir = TempDir::new("osm_transit_extractor").expect("create temp dir");
     osm_transit_extractor::write_stop_points_to_csv(&stops, &tmp_dir, false);
+    let file_path = tmp_dir
+        .path()
+        .join("osm-transit-extractor_stop_points.csv");
+    assert!(file_path.is_file());
+    let file = File::open(file_path).unwrap();
+    let reader = BufReader::new(file);
+    assert_eq!(78, reader.lines().count());    
+
     tmp_dir.close().expect("delete temp dir");
 }
 
@@ -130,6 +142,13 @@ pub fn osm_fixture_stopareas_stoppoints_csv() {
     let stop_areas = osm_transit_extractor::get_stop_areas_from_osm(&mut parsed_pbf);
     let tmp_dir = TempDir::new("osm_transit_extractor").expect("create temp dir");
     osm_transit_extractor::write_stop_areas_stop_point_to_csv(&stop_areas, &tmp_dir);
+    let file_path = tmp_dir
+        .path()
+        .join("osm-transit-extractor_stop_areas_stop_point.csv");
+    assert!(file_path.is_file());
+    let file = File::open(file_path).unwrap();
+    let reader = BufReader::new(file);
+    assert_eq!(3, reader.lines().count());    
     tmp_dir.close().expect("delete temp dir");
 }
 
@@ -142,6 +161,13 @@ pub fn osm_fixture_routes_csv() {
     let routes = osm_transit_extractor::get_routes_from_osm(&mut parsed_pbf);
     let tmp_dir = TempDir::new("osm_transit_extractor").expect("create temp dir");
     osm_transit_extractor::write_routes_to_csv(routes, &tmp_dir, true);
+    let file_path = tmp_dir
+        .path()
+        .join("osm-transit-extractor_routes.csv");
+    assert!(file_path.is_file());
+    let file = File::open(file_path).unwrap();
+    let reader = BufReader::new(file);
+    assert_eq!(4, reader.lines().count());    
     tmp_dir.close().expect("delete temp dir");
 }
 
@@ -154,5 +180,13 @@ pub fn osm_fixture_lines_csv() {
     let lines = osm_transit_extractor::get_lines_from_osm(&mut parsed_pbf);
     let tmp_dir = TempDir::new("osm_transit_extractor").expect("create temp dir");
     osm_transit_extractor::write_lines_to_csv(lines, &tmp_dir, false);
+    let file_path = tmp_dir
+        .path()
+        .join("osm-transit-extractor_lines.csv");
+    assert!(file_path.is_file());
+    let file = File::open(file_path).unwrap();
+    let reader = BufReader::new(file);
+    assert_eq!(2, reader.lines().count());    
+
     tmp_dir.close().expect("delete temp dir");
 }
