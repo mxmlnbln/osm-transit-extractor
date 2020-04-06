@@ -13,7 +13,7 @@ To add data to the OSM fixture :
 Example of osmosis command line :
 `osmosis --read-xml file="osm_fixture.osm" --write-pbf file="osm_fixture.osm.pbf"`
 
-> NB: osmcnvert can be used for the conversion, but some *name* tags disapears on ways and relations
+> NB: osmconvert can be used for the conversion, but some *name* tags disapears on ways and relations
 
 Do not forget to commit the usable *.osm.pbf file and the *.osm source file to ease the updates.
 
