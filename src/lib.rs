@@ -127,7 +127,7 @@ pub struct Route {
 }
 
 impl Route {
-    fn contains_stop_point_id(&self, stop_point_id: &String) -> bool {
+    fn contains_stop_point_id(&self, stop_point_id: &str) -> bool {
         self.ordered_route_points
             .iter()
             .filter(|rp| rp.stop_point_id == *stop_point_id)
@@ -137,7 +137,7 @@ impl Route {
 }
 
 impl Route {
-    fn get_stop_point_roles<'a>(&'a self, stop_point_id: &String) -> Vec<&'a String> {
+    fn get_stop_point_roles<'a>(&'a self, stop_point_id: &str) -> Vec<&'a String> {
         self.ordered_route_points
             .iter()
             .filter(|rp| rp.stop_point_id == *stop_point_id)
@@ -205,14 +205,14 @@ impl Route {
                     })
                     .collect()
             })
-            .map(|wkt_coords| wkt::types::LineString(wkt_coords))
+            .map(wkt::types::LineString)
             .collect();
         wkt::types::MultiLineString(wkt_linestrings)
     }
 }
 
-fn shape_to_wkt(shape: &Vec<Vec<Coord>>) -> String {
-    if shape.len() == 0 {
+fn shape_to_wkt(shape: &[Vec<Coord>]) -> String {
+    if shape.is_empty() {
         "".to_string()
     } else {
         let linestring: String = shape
@@ -339,7 +339,7 @@ fn is_route(obj: &osmpbfreader::OsmObj) -> bool {
         )
 }
 
-const STOP_ROLES: [&'static str; 7] = [
+const STOP_ROLES: [&str; 7] = [
     "stop",
     "platform",
     "stop_exit_only",
@@ -366,7 +366,7 @@ fn get_one_coord_from_way(
                 .map(|node| Coord::new(node.lat(), node.lon()))
         })
         .next()
-        .unwrap_or(Coord::new(0., 0.))
+        .unwrap_or_else(|| Coord::new(0., 0.))
 }
 
 fn get_one_coord_from_rel(
@@ -382,7 +382,7 @@ fn get_one_coord_from_rel(
             Relation(..) => None,
         })
         .next()
-        .unwrap_or(Coord::new(0., 0.))
+        .unwrap_or_else(|| Coord::new(0., 0.))
 }
 
 fn osm_way_to_vec(
@@ -420,7 +420,7 @@ fn osm_route_to_shape(
 
 fn osm_line_to_shape(
     obj_map: &BTreeMap<osmpbfreader::OsmId, osmpbfreader::OsmObj>,
-    osm_relations_ref: &Vec<osmpbfreader::Ref>,
+    osm_relations_ref: &[osmpbfreader::Ref],
 ) -> Vec<Vec<Coord>> {
     osm_relations_ref
         .iter()
@@ -609,7 +609,7 @@ pub fn get_lines_from_osm(pbf: &mut OsmPbfReader) -> Vec<Line> {
         .collect()
 }
 
-pub fn get_routes_from_stop<'a>(routes: &'a Vec<Route>, stop_point: &StopPoint) -> Vec<&'a Route> {
+pub fn get_routes_from_stop<'a>(routes: &'a [Route], stop_point: &StopPoint) -> Vec<&'a Route> {
     routes
         .iter()
         .filter(|route| route.contains_stop_point_id(&stop_point.id))
@@ -658,7 +658,7 @@ pub fn categorize_stop_point(stop_point: &mut StopPoint, routes: Vec<&Route>) {
     }
 }
 
-pub fn update_stop_points_type(stop_points: &mut Vec<StopPoint>, routes: &Vec<Route>) {
+pub fn update_stop_points_type(stop_points: &mut [StopPoint], routes: &[Route]) {
     stop_points.iter_mut().for_each(|mut sp| {
         let route_from_stops = get_routes_from_stop(&routes, sp);
         categorize_stop_point(&mut sp, route_from_stops);
@@ -689,7 +689,7 @@ pub fn get_osm_tcobjects(parsed_pbf: &mut OsmPbfReader, stops_only: bool) -> Osm
 }
 
 pub fn write_stop_points_to_csv<P: AsRef<Path>>(
-    stop_points: &Vec<StopPoint>,
+    stop_points: &[StopPoint],
     output_dir: P,
     all_tags: bool,
 ) {
@@ -697,13 +697,7 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
     let csv_file = output_dir.join("osm-transit-extractor_stop_points.csv");
 
     let mut wtr = csv::Writer::from_path(csv_file).unwrap();
-    let default_header = [
-        "stop_point_id",
-        "lat",
-        "lon",
-        "name",
-        "stop_point_type",
-    ];
+    let default_header = ["stop_point_id", "lat", "lon", "name", "stop_point_type"];
     let osm_tag_list: BTreeSet<String> = stop_points
         .iter()
         .flat_map(|s| s.all_osm_tags.keys().map(|s| s.to_string()))
@@ -712,7 +706,7 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
         let osm_header = osm_tag_list.iter().map(|s| format!("osm:{}", s));
         let v: Vec<_> = default_header
             .iter()
-            .map(|s| s.to_string())
+            .map(|&s| s.to_string())
             .chain(osm_header)
             .collect();
         wtr.serialize(v).unwrap();
@@ -743,10 +737,7 @@ pub fn write_stop_points_to_csv<P: AsRef<Path>>(
     }
 }
 
-pub fn write_stop_areas_stop_point_to_csv<P: AsRef<Path>>(
-    stop_areas: &Vec<StopArea>,
-    output_dir: P,
-) {
+pub fn write_stop_areas_stop_point_to_csv<P: AsRef<Path>>(stop_areas: &[StopArea], output_dir: P) {
     let output_dir = output_dir.as_ref();
     let csv_file = output_dir.join("osm-transit-extractor_stop_areas_stop_point.csv");
 
@@ -757,7 +748,7 @@ pub fn write_stop_areas_stop_point_to_csv<P: AsRef<Path>>(
         for sp_id in &sa.stop_point_ids {
             let csv_row = vec![
                 format!("StopArea:{}", sa.id),
-                format!("StopPoint:{}", sp_id)
+                format!("StopPoint:{}", sp_id),
             ];
             wtr.serialize(csv_row).unwrap();
         }
@@ -765,7 +756,7 @@ pub fn write_stop_areas_stop_point_to_csv<P: AsRef<Path>>(
 }
 
 pub fn write_stop_areas_to_csv<P: AsRef<Path>>(
-    stop_areas: &Vec<StopArea>,
+    stop_areas: &[StopArea],
     output_dir: P,
     all_tags: bool,
 ) {
@@ -782,7 +773,7 @@ pub fn write_stop_areas_to_csv<P: AsRef<Path>>(
         let osm_header = osm_tag_list.iter().map(|s| format!("osm:{}", s));
         let v: Vec<_> = default_header
             .iter()
-            .map(|s| s.to_string())
+            .map(|&s| s.to_string())
             .chain(osm_header)
             .collect();
         wtr.serialize(v).unwrap();
@@ -844,7 +835,7 @@ pub fn write_routes_to_csv<P: AsRef<Path>>(routes: Vec<Route>, output_dir: P, al
     if all_tags {
         let v: Vec<_> = default_header
             .iter()
-            .map(|s| s.to_string())
+            .map(|&s| s.to_string())
             .chain(osm_header)
             .collect();
         wtr_route.serialize(v).unwrap();
@@ -919,7 +910,7 @@ pub fn write_lines_to_csv<P: AsRef<Path>>(lines: Vec<Line>, output_dir: P, all_t
         let osm_header = osm_tag_list.iter().map(|s| format!("osm:{}", s));
         let v: Vec<_> = default_header
             .iter()
-            .map(|s| s.to_string())
+            .map(|&s| s.to_string())
             .chain(osm_header)
             .collect();
         lines_wtr.serialize(v).unwrap();

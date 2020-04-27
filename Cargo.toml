@@ -5,7 +5,10 @@ authors = ["Pascal Rhod <pascal.rhod@canaltp.fr>", "Noémie Lehuby <noemie.lehub
 edition="2018"
 license = "AGPL-3.0"
 repository = "https://github.com/CanalTP/osm-transit-extractor"
+readme = "README.md"
 description = "Extract public transport data from an OpenStreetMap file"
+keywords = ["osm", "transit"]
+categories = ["data-structures", "encoding", "parser-implementations"]
 
 [badges]
 travis-ci = { repository = "CanalTP/osm-transit-extractor" }
