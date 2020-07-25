@@ -1,6 +1,6 @@
 [package]
 name = "osm_transit_extractor"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Pascal Rhod <pascal.rhod@canaltp.fr>", "Noémie Lehuby <noemie.lehuby@canaltp.fr>"]
 edition="2018"
 license = "AGPL-3.0"
@@ -15,13 +15,12 @@ travis-ci = { repository = "CanalTP/osm-transit-extractor" }
 
 [dependencies]
 csv = "1.0.7"
-osmpbfreader = "0.13.0"
-wkt = "0.5.0"
-serde = "1.0.92"
-serde_derive = "1.0.92"
-structopt = "0.2.16"
-structopt-derive = "0.2.16"
-tempdir = "0.3.7"
-log = "0.4.6"
-simple_logger = "1.2.0"
-geo-types = "0.4.3"
+geo-types = "0.6"
+log = "0.4"
+osmpbfreader = "0.13"
+serde = "1"
+serde_derive = "1"
+simple_logger = "1"
+structopt = "0.3"
+tempdir = "0.3"
+wkt = "0.8"
