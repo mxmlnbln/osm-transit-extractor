@@ -190,7 +190,7 @@ impl Shape for Line {
 #[allow(dead_code)]
 /* to_multilinestring is to be used when issue #8 is resolved*/
 impl Route {
-    fn to_multilinestring(&self) -> wkt::types::MultiLineString {
+    fn to_multilinestring(&self) -> wkt::types::MultiLineString<f64> {
         let wkt_linestrings = self
             .shape
             .iter()
