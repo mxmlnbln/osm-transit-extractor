@@ -1,4 +1,4 @@
-# osm-transit-extractor [![Build status](https://travis-ci.org/CanalTP/osm-transit-extractor.svg?branch=master)](https://travis-ci.org/CanalTP/osm-transit-extractor/)
+# osm-transit-extractor [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/CanalTP/osm-transit-extractor/Continuous%20Integration?logo=github&style=flat-square)](https://github.com/CanalTP/osm-transit-extractor/actions?query=workflow%3A%22Continuous+Integration%22)
 
 This crate is a library to extract public transport data from an [OpenStreetMap](http://www.openstreetmap.org/) file. A CSV output with several files is also provided as a quick mean to manipulate public transport data from OSM with an external tool.
 
