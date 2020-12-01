@@ -1,20 +1,20 @@
 [package]
-name = "osm_transit_extractor"
-version = "0.4.0"
 authors = ["Pascal Rhod <pascal.rhod@canaltp.fr>", "Noémie Lehuby <noemie.lehuby@canaltp.fr>"]
-edition="2018"
-license = "AGPL-3.0"
-repository = "https://github.com/CanalTP/osm-transit-extractor"
-readme = "README.md"
-description = "Extract public transport data from an OpenStreetMap file"
-keywords = ["osm", "transit"]
 categories = ["data-structures", "encoding", "parser-implementations"]
+description = "Extract public transport data from an OpenStreetMap file"
+edition = "2018"
+keywords = ["osm", "transit"]
+license = "AGPL-3.0"
+name = "osm_transit_extractor"
+readme = "README.md"
+repository = "https://github.com/CanalTP/osm-transit-extractor"
+version = "0.4.0"
 
 [badges]
-travis-ci = { repository = "CanalTP/osm-transit-extractor" }
+travis-ci = {repository = "CanalTP/osm-transit-extractor"}
 
 [dependencies]
-csv = "1.0.7"
+csv = "1"
 geo-types = "0.6"
 log = "0.4"
 osmpbfreader = "0.13"

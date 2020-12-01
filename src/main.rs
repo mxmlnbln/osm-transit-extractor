@@ -30,6 +30,7 @@
 
 use log::info;
 use osm_transit_extractor::*;
+use simple_logger::SimpleLogger;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -63,7 +64,7 @@ struct Args {
 }
 
 fn main() {
-    simple_logger::init().unwrap();
+    SimpleLogger::new().init().unwrap();
     info!("Launching the process !");
 
     let args = Args::from_args();
