@@ -30,6 +30,7 @@
 
 use log::info;
 use osm_transit_extractor::*;
+use simple_logger::SimpleLogger;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -63,7 +64,7 @@ struct Args {
 }
 
 fn main() {
-    simple_logger::init().unwrap();
+    SimpleLogger::new().init().unwrap();
     info!("Launching the process !");
 
     let args = Args::from_args();
@@ -74,11 +75,11 @@ fn main() {
 
     write_stop_points_to_csv(
         &osmtc_response.stop_points,
-        &osmtc_response.stop_areas,
         &args.output,
         args.dump_all_tags,
     );
     write_stop_areas_to_csv(&osmtc_response.stop_areas, &args.output, args.dump_all_tags);
+    write_stop_areas_stop_point_to_csv(&osmtc_response.stop_areas, &args.output);
 
     if osmtc_response.routes.is_some() {
         write_routes_to_csv(
